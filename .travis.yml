@@ -36,10 +36,11 @@ matrix:
     - stage: build
       name: "Build"
       script: make build
-
-script:
-  - make unit
-  - make integration
+    - stage: unit
+      name: "Unit Test"
+      script: make unit
+    - stage: integration
+      name: "Integration Test"
 
 cache:
   directories:
@@ -48,3 +49,5 @@ cache:
 stages:
   - deptree
   - build
+  - unit
+  - integration
