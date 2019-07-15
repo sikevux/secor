@@ -21,6 +21,7 @@ before_install:
   - mv $HOME/s3cmd-$S3CMD $HOME/.s3cmd
   - cd $HOME/.s3cmd && python setup.py install --user && cd -
   - gem install fakes3 -v 1.2.1
+  - pip install awscli-local localstack
 # Skip install
 ## As we require to explicit set a kafka/library profile to build with, and travis just does mvn install -DskipTests=true -Dmaven.javadoc.skiop0true -B -V without using MVN_OPTS
 # Also dependencies gets installed by other targets anyway.
@@ -31,8 +32,6 @@ jobs:
     - stage: deptree
       name: "Dependency Tree"
       script: make dependency_tree
-
-
 
 script:
   - make build
