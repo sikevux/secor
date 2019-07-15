@@ -95,12 +95,14 @@ public class LogFileVerifierMain {
                 numMessages = ((Number) commandLine.getParsedOptionValue("messages")).intValue();
             }
 	    LOG.debug("numMessages: ", numMessages);
+	    System.out.println("numMessages");
             verifier.verifyCounts(startOffset, endOffset, numMessages);
 	    LOG.debug("VerifyCounts");
+	    System.out.println("VerifyCounts");
             if (commandLine.hasOption("sequence_offsets")) {
                 verifier.verifySequences(startOffset, endOffset);
             }
-	    LOG.debug("After IF");
+	    LOG.debug("verification succeeded");
             System.out.println("verification succeeded");
         } catch (Throwable t) {
             LOG.error("Log file verifier failed", t);
