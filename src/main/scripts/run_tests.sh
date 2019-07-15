@@ -190,7 +190,7 @@ stop_secor() {
 run_finalizer() {
     ${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
-        com.pinterest.secor.main.PartitionFinalizerMain > ${LOGS_DIR}/finalizer.log 2>&1
+        com.pinterest.secor.main.PartitionFinalizerMain 2>&1 | tee ${LOGS_DIR}/finalizer.log
 
     EXIT_CODE=$?
     if [ ${EXIT_CODE} -ne 0 ]; then
@@ -235,8 +235,8 @@ verify() {
     for RUNMODE in ${RUNMODE_0} ${RUNMODE_1}; do
       ${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
           -Dconfig=secor.test.${RUNMODE}.properties ${ADDITIONAL_OPTS} -cp ${CLASSPATH} \
-          com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q 2>&1 | tee \
-          ${LOGS_DIR}/log_verifier_${RUNMODE}.log
+          com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q 2>&1 \
+          > ${LOGS_DIR}/log_verifier_${RUNMODE}.log
       VERIFICATION_EXIT_CODE=$?
       if [ ${VERIFICATION_EXIT_CODE} -ne 0 ]; then
         echo -e "\e[1;41;97mVerification FAILED\e[0m"
