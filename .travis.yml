@@ -25,8 +25,18 @@ before_install:
 ## As we require to explicit set a kafka/library profile to build with, and travis just does mvn install -DskipTests=true -Dmaven.javadoc.skiop0true -B -V without using MVN_OPTS
 # Also dependencies gets installed by other targets anyway.
 install: true
-script:
-  - make dependency_tree
-  - make unit
-  - make integration
 
+jobs:
+  include:
+    - stage: deptree
+      name: "Dependency Tree"
+      script: make dependency_tree
+    - stage: tests
+      name: "Unit Tests"
+      script: make unit
+    - script: make integration
+      name: "Integration Tests"
+
+stages:
+  - deptree
+  - tests

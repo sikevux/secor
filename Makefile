@@ -10,7 +10,7 @@ build:
 	@mvn package $(MVN_OPTS) -P $(MVN_PROFILE)
 
 dependency_tree:
-	@mvn dependency:tree -P $(MVN_PROFILE) -q
+	@mvn dependency:tree -P $(MVN_PROFILE)
 
 unit:
 	@mvn test -P $(MVN_PROFILE)
