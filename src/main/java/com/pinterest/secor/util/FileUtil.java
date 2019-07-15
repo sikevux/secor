@@ -79,8 +79,8 @@ public class FileUtil {
                 if (!config.getAwsAccessKey().isEmpty()) {
                     mConf.set(Constants.ACCESS_KEY, config.getAwsAccessKey());
                     mConf.set(Constants.SECRET_KEY, config.getAwsSecretKey());
-                    mConf.set("fs.s3n.awsAccessKeyId", config.getAwsAccessKey());
-                    mConf.set("fs.s3n.awsSecretAccessKey", config.getAwsSecretKey());
+                    mConf.set("fs.s3a.awsAccessKeyId", config.getAwsAccessKey());
+                    mConf.set("fs.s3a.awsSecretAccessKey", config.getAwsSecretKey());
                 }
             }
         }
@@ -156,7 +156,7 @@ public class FileUtil {
         if (statuses != null) {
             for (FileStatus status : statuses) {
                 Path statusPath = status.getPath();
-                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://") ||
+                if (path.startsWith("s3://") || path.startsWith("s3a://") ||
                         path.startsWith("swift://") || path.startsWith("gs://")) {
                     paths.add(statusPath.toUri().toString());
                 } else {
@@ -225,7 +225,7 @@ public class FileUtil {
             for (FileStatus fileStatus : statuses) {
                 Path statusPath = fileStatus.getPath();
                 String stringPath;
-                if (path.startsWith("s3://") || path.startsWith("s3n://") || path.startsWith("s3a://") ||
+                if (path.startsWith("s3://") || path.startsWith("s3a://") ||
                         path.startsWith("swift://") || path.startsWith("gs://")) {
                     stringPath = statusPath.toUri().toString();
                 } else {
