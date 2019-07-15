@@ -31,15 +31,9 @@ jobs:
     - stage: deptree
       name: "Dependency Tree"
       script: make dependency_tree
-    - stage: tests
-      name: "Unit Tests"
-      script: make unit
-    - script: make integration
-      name: "Integration Tests"
-
-stages:
-  - deptree
-  - tests
+script:
+  - make unit
+  - make integration
 
 cache:
   directories:
