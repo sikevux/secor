@@ -45,3 +45,6 @@ cache:
 
 stages:
   - deptree
+
+after_failure:
+  - cat /tmp/secor_dev/logs/log_verifier_backup.log
