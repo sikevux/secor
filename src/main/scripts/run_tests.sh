@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -x
 
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -72,11 +73,6 @@ fi
 
 source ${BASE_DIR}/run_common.sh
 
-run_command() {
-    echo "running $@"
-    eval "$@"
-}
-
 check_for_native_libs() {
     files=($(find "${HADOOP_NATIVE_LIB_PATH}" -maxdepth 1 -name "*.so" 2> /dev/null))
     if [ ${#files[@]} -eq 0 ]; then
@@ -86,81 +82,88 @@ check_for_native_libs() {
 }
 
 recreate_dirs() {
-    run_command "rm -r -f ${PARENT_DIR}"
+    rm -r -f ${PARENT_DIR}
     if [ ${cloudService} = "swift" ]; then
-	if ${CONTAINER_PER_TOPIC}; then
-	   run_command "swift delete test"
+    if ${CONTAINER_PER_TOPIC}; then
+        swift delete test
         else
-           run_command "swift delete ${SWIFT_CONTAINER}"
+           swift delete ${SWIFT_CONTAINER}
            sleep 3
-           run_command "swift post ${SWIFT_CONTAINER}"
+           swift post ${SWIFT_CONTAINER}
         fi
     else
         if [ -n "${SECOR_LOCAL_S3}" ]; then
-            run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR} | awk '{ print \$4 }' | xargs -L 1 s3cmd -c ${CONF_DIR}/test.s3cfg del"
-            run_command "s3cmd -c ${CONF_DIR}/test.s3cfg ls -r ${S3_LOGS_DIR}"
+            awslocal s3 rm --recursive ${S3_LOGS_DIR}
         else
-            run_command "s3cmd del --recursive ${S3_LOGS_DIR}"
-            run_command "s3cmd ls -r ${S3_LOGS_DIR}"
+            s3cmd del --recursive ${S3_LOGS_DIR}
+            s3cmd ls -r ${S3_LOGS_DIR}
         fi
     fi
     # create logs directory
     if [ ! -d ${LOGS_DIR} ]; then
-        run_command "mkdir -p ${LOGS_DIR}"
+        mkdir -p ${LOGS_DIR}
     fi
 }
 
 start_s3() {
     if [ -n "${SECOR_LOCAL_S3}" ]; then
-        if command -v fakes3 > /dev/null 2>&1; then
-            run_command "fakes3 --root=/tmp/fakes3 --port=5000 --hostname=localhost > /tmp/fakes3.log 2>&1 &"
-            sleep 10
-            run_command "s3cmd -c ${CONF_DIR}/test.s3cfg mb s3://${BUCKET}"
+        if command -v localstack > /dev/null 2>&1; then
+            export SERVICES=s3
+            export DATA_DIR=/tmp/localstack/data
+            localstack start > /tmp/localstack.log 2>&1 &
+            echo 'Waiting for S3 to start'
+        while ! grep Ready /tmp/localstack.log; do
+            echo -n '.'
+            sleep 2
+        done
+        awslocal s3 mb s3://${BUCKET}
+        awslocal s3 mb s3://test-bucket || true
+        awslocal s3 ls --recursive s3://${BUCKET}
         else
-            echo "Couldn't find FakeS3 binary, please install it using `gem install fakes3`"
+            echo 'Could not find localstack binary, please install it using `pip install localstack`'
         fi
     fi
 }
 
 stop_s3() {
     if [ -n "${SECOR_LOCAL_S3}" ]; then
-        run_command "pkill -f 'fakes3' || true"
-        run_command "rm -r -f /tmp/fakes3"
+        pkill -9 localstack || true
+        rm -r -f /tmp/localstack
     fi
 }
 
 start_zookeeper() {
     if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
-      run_command "docker-compose up -d zookeeper"
+        docker-compose up -d zookeeper
     else
-      run_command "${BASE_DIR}/run_kafka_class.sh \
+        ${BASE_DIR}/run_kafka_class.sh \
           org.apache.zookeeper.server.quorum.QuorumPeerMain ${CONF_DIR}/zookeeper.test.properties > \
-          ${LOGS_DIR}/zookeeper.log 2>&1 &"
+          ${LOGS_DIR}/zookeeper.log 2>&1 &
     fi
 }
 
 stop_zookeeper() {
     if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
-      run_command "docker-compose rm -sf zookeeper"
+        docker-compose rm -sf zookeeper
     else
-      run_command "pkill -f 'org.apache.zookeeper.server.quorum.QuorumPeerMain' || true"
+        pkill -f 'org.apache.zookeeper.server.quorum.QuorumPeerMain' || true
     fi
 }
 
 start_kafka_server () {
     if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
-      run_command "docker-compose up -d kafka"
+        docker-compose up -d kafka
     else
-      run_command "${BASE_DIR}/run_kafka_class.sh kafka.Kafka ${CONF_DIR}/kafka.test.properties > \
-          ${LOGS_DIR}/kafka_server.log 2>&1 &"
+        ${BASE_DIR}/run_kafka_class.sh kafka.Kafka ${CONF_DIR}/kafka.test.properties > \
+          ${LOGS_DIR}/kafka_server.log 2>&1 &
     fi
 }
 
 stop_kafka_server() {
     if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
-      run_command "docker-compose rm -sf kafka"
+        docker-compose rm -sf kafka
     else
-      run_command "pkill -f 'kafka.Kafka' || true"
+        pkill -f 'kafka.Kafka' || true
     fi
 }
 
@@ -170,24 +173,24 @@ start_secor() {
       ADDITIONAL_OPTS="${ADDITIONAL_OPTS} -Dkafka.message.timestamp.className=com.pinterest.secor.timestamp.Kafka8MessageTimestamp"
     fi
 
-    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    ${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.backup.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
-        com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &"
+        com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_backup.log 2>&1 &
     if [ "${MESSAGE_TYPE}" = "binary" ]; then
-       run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
+       ${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
            -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
-           com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &"
+           com.pinterest.secor.main.ConsumerMain > ${LOGS_DIR}/secor_partition.log 2>&1 &
     fi
 }
 
 stop_secor() {
-    run_command "pkill -f 'com.pinterest.secor.main.ConsumerMain' || true"
+    pkill -f 'com.pinterest.secor.main.ConsumerMain' || true
 }
 
 run_finalizer() {
-    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    ${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.partition.properties ${ADDITIONAL_OPTS} -cp $CLASSPATH \
-        com.pinterest.secor.main.PartitionFinalizerMain > ${LOGS_DIR}/finalizer.log 2>&1 "
+        com.pinterest.secor.main.PartitionFinalizerMain > ${LOGS_DIR}/finalizer.log 2>&1
 
     EXIT_CODE=$?
     if [ ${EXIT_CODE} -ne 0 ]; then
@@ -199,11 +202,11 @@ run_finalizer() {
 
 create_topic() {
     if [[ "$MVN_PROFILE" == kafka-2.0.0 ]];then
-      run_command "docker-compose exec kafka kafka-topics --zookeeper zookeeper:2181 --create --replication-factor 1 --partitions 2 --topic test"
+        docker-compose exec kafka kafka-topics --zookeeper zookeeper:2181 --create --replication-factor 1 --partitions 2 --topic test
     else
-      run_command "${BASE_DIR}/run_kafka_class.sh kafka.admin.TopicCommand --create --zookeeper \
+        ${BASE_DIR}/run_kafka_class.sh kafka.admin.TopicCommand --create --zookeeper \
           localhost:2181 --replication-factor 1 --partitions 2 --topic test > \
-          ${LOGS_DIR}/create_topic.log 2>&1"
+          ${LOGS_DIR}/create_topic.log 2>&1
     fi
 }
 
@@ -211,10 +214,10 @@ create_topic() {
 # $1 number of messages
 # $2 timeshift in seconds
 post_messages() {
-    run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
+    ${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
         -Dconfig=secor.test.backup.properties -cp ${CLASSPATH} \
         com.pinterest.secor.main.TestLogMessageProducerMain -t test -m $1 -p 1 -type ${MESSAGE_TYPE} -timeshift $2 > \
-        ${LOGS_DIR}/test_log_message_producer.log 2>&1"
+        ${LOGS_DIR}/test_log_message_producer.log 2>&1
 }
 
 # verify the messages
@@ -230,10 +233,10 @@ verify() {
        RUNMODE_1="backup"
     fi
     for RUNMODE in ${RUNMODE_0} ${RUNMODE_1}; do
-      run_command "${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
+      ${JAVA} -server -ea -Dlog4j.configuration=log4j.dev.properties \
           -Dconfig=secor.test.${RUNMODE}.properties ${ADDITIONAL_OPTS} -cp ${CLASSPATH} \
           com.pinterest.secor.main.LogFileVerifierMain -t test -m $1 -q > \
-          ${LOGS_DIR}/log_verifier_${RUNMODE}.log 2>&1"
+          ${LOGS_DIR}/log_verifier_${RUNMODE}.log 2>&1
       VERIFICATION_EXIT_CODE=$?
       if [ ${VERIFICATION_EXIT_CODE} -ne 0 ]; then
         echo -e "\e[1;41;97mVerification FAILED\e[0m"
@@ -248,13 +251,13 @@ verify() {
 
       # Verify SUCCESS file
       if [ ${cloudService} = "swift" ]; then
-        run_command "swift list ${SWIFT_CONTAINER} |  grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
+          swift list ${SWIFT_CONTAINER} |  grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt
       else
-        if [ -n "${SECOR_LOCAL_S3}" ]; then
-            run_command "s3cmd ls -c ${CONF_DIR}/test.s3cfg -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
-        else
-            run_command "s3cmd ls -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt"
-        fi
+          if [ -n "${SECOR_LOCAL_S3}" ]; then
+              awslocal s3 ls --recursive ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt
+          else
+              s3cmd ls -r ${S3_LOGS_DIR} | grep _SUCCESS | wc -l > /tmp/secor_tests_output.txt
+          fi
       fi
       count=$(</tmp/secor_tests_output.txt)
       count="${count//[[:space:]]/}"
@@ -269,7 +272,7 @@ verify() {
 set_offsets_in_zookeeper() {
     for group in secor_backup secor_partition; do
         for partition in 0 1; do
-            cat <<EOF | run_command "${BASE_DIR}/run_zookeeper_command.sh localhost:2181 > ${LOGS_DIR}/run_zookeeper_command.log 2>&1"
+            cat <<EOF | ${BASE_DIR}/run_zookeeper_command.sh localhost:2181 > ${LOGS_DIR}/run_zookeeper_command.log 2>&1
 create /consumers ''
 create /consumers/${group} ''
 create /consumers/${group}/offsets ''
