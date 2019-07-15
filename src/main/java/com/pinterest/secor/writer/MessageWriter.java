@@ -70,7 +70,7 @@ public class MessageWriter {
         } else if (mFileExtension == null){
             mFileExtension = "";
         }
-        
+
         mLocalPrefix = mConfig.getLocalPath() + '/' + IdUtil.getLocalMessageDir();
         mGeneration = mConfig.getGeneration();
     }

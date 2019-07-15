@@ -57,7 +57,7 @@ import com.pinterest.secor.util.orc.schema.ORCSchemaProvider;
 
 /**
  * ORC reader/writer implementation
- * 
+ *
  * @author Ashish (ashu.impetus@gmail.com)
  *
  */
@@ -190,7 +190,7 @@ public class JsonORCFileReaderWriterFactory implements FileReaderWriterFactory {
 
     /**
      * Used for returning the compression kind used in ORC
-     * 
+     *
      * @param codec
      * @return
      */

@@ -96,14 +96,14 @@ public class S3UploadManager extends UploadManager {
 
         ClientConfiguration clientConfiguration = new ClientConfiguration();
         boolean isHttpProxyEnabled = mConfig.getAwsProxyEnabled();
-        
+
         //proxy settings
         if(isHttpProxyEnabled){
-        	LOG.info("Http Proxy Enabled for S3UploadManager");
-        	String httpProxyHost = mConfig.getAwsProxyHttpHost();
-        	int httpProxyPort = mConfig.getAwsProxyHttpPort();
-        	clientConfiguration.setProxyHost(httpProxyHost);
-        	clientConfiguration.setProxyPort(httpProxyPort);        	
+            LOG.info("Http Proxy Enabled for S3UploadManager");
+            String httpProxyHost = mConfig.getAwsProxyHttpHost();
+            int httpProxyPort = mConfig.getAwsProxyHttpPort();
+            clientConfiguration.setProxyHost(httpProxyHost);
+            clientConfiguration.setProxyPort(httpProxyPort);
         }
 
         if (accessKey.isEmpty() || secretKey.isEmpty()) {

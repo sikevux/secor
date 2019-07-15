@@ -61,7 +61,7 @@ public class SecorConfigTest {
 
         SecorConfig secorConfig = new SecorConfig(properties);
         Map<String, String> messageClassPerTopic = secorConfig.getProtobufMessageClassPerTopic();
-        
+
         assertEquals(2, messageClassPerTopic.size());
         assertEquals(UnitTestMessage1.class.getName(), messageClassPerTopic.get("mytopic1"));
         assertEquals(UnitTestMessage2.class.getName(), messageClassPerTopic.get("mytopic2"));

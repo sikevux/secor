@@ -93,7 +93,7 @@ public class ThriftParquetFileReaderWriterFactoryTest extends TestCase {
         FileReader fileReader = ReflectionUtil.createFileReader(config.getFileReaderWriterFactory(), tempLogFilePath,
                 null, config);
         TDeserializer deserializer = new TDeserializer(new TCompactProtocol.Factory());
-        
+
         KeyValue kvout = fileReader.next();
         assertEquals(kv1.getOffset(), kvout.getOffset());
         assertArrayEquals(kv1.getValue(), kvout.getValue());

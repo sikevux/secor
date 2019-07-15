@@ -64,13 +64,13 @@ public class ThriftMessageParser extends TimestampedMessageParser {
         super(config);
         TProtocolFactory protocolFactory = null;
         String protocolName = mConfig.getThriftProtocolClass();
-        
+
         if (StringUtils.isNotEmpty(protocolName)) {
             String factoryClassName = protocolName.concat("$Factory");
             protocolFactory = ((Class<? extends TProtocolFactory>) Class.forName(factoryClassName)).newInstance();
         } else
             protocolFactory = new TBinaryProtocol.Factory();
-        
+
         mDeserializer = new TDeserializer(protocolFactory);
         mThriftPath = new ThriftPath(mConfig.getMessageTimestampName(),(short) mConfig.getMessageTimestampId());
         mTimestampType = mConfig.getMessageTimestampType();

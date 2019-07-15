@@ -26,9 +26,9 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 
 /**
- * 
+ *
  * Compression Codec related helper methods
- * 
+ *
  * @author Praveen Murugesan (praveen@uber.com)
  *
  */

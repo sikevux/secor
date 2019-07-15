@@ -37,14 +37,14 @@ import com.pinterest.secor.common.SecorConfig;
  * Adapted from ProtobufUtil Various utilities for working with thrift encoded
  * messages. This utility will look for thrift class in the configuration. It
  * can be either per Kafka topic configuration, for example:
- * 
+ *
  * <code>secor.thrift.message.class.&lt;topic&gt;=&lt;thrift class name&gt;</code>
- * 
+ *
  * or, it can be global configuration for all topics (in case all the topics
  * transfer the same message type):
- * 
+ *
  * <code>secor.thrift.message.class.*=&lt;thrift class name&gt;</code>
- * 
+ *
  * @author jaime sastre (jaime sastre.s@gmail.com)
  */
 public class ThriftUtil {
@@ -60,7 +60,7 @@ public class ThriftUtil {
 
     /**
      * Creates new instance of {@link ThriftUtil}
-     * 
+     *
      * @param config
      *            Secor configuration instance
      * @throws RuntimeException
@@ -70,7 +70,7 @@ public class ThriftUtil {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public ThriftUtil(SecorConfig config) {
         Map<String, String> messageClassPerTopic = config.getThriftMessageClassPerTopic();
-        
+
         for (Entry<String, String> entry : messageClassPerTopic.entrySet()) {
             try {
                 String topic = entry.getKey();
@@ -110,7 +110,7 @@ public class ThriftUtil {
 
     /**
      * Returns configured thrift message class for the given Kafka topic
-     * 
+     *
      * @param topic
      *            Kafka topic
      * @return thrift message class used by this utility instance, or

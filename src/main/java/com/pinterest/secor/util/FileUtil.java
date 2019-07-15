@@ -239,7 +239,7 @@ public class FileUtil {
         }
         return modificationTime;
     }
-    
+
     /** Generate MD5 hash of topic and partitions. And extract first 4 characters of the MD5 hash.
      * @param topic topic name
      * @param partitions partitions

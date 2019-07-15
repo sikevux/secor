@@ -33,7 +33,7 @@ import com.pinterest.secor.util.ProtobufUtil;
 
 /**
  * Protocol buffer message timestamp extractor
- * 
+ *
  * If <code>secor.protobuf.message.class</code> is not set assumes that the very
  * first <code>uint64</code> field in a message is the timestamp. Otherwise,
  * uses <code>message.timestamp.name</code> as a path to get to the timestamp
