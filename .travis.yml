@@ -31,6 +31,12 @@ jobs:
     - stage: deptree
       name: "Dependency Tree"
       script: make dependency_tree
+matrix:
+  include:
+    - stage: build
+      name: "Build"
+      script: make build
+
 script:
   - make unit
   - make integration
@@ -41,3 +47,4 @@ cache:
 
 stages:
   - deptree
+  - build
