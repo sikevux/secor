@@ -117,7 +117,6 @@ start_s3() {
             sleep 2
         done
         awslocal s3 mb s3://${BUCKET}
-        awslocal s3 mb s3://test-bucket || true
         awslocal s3 ls --recursive s3://${BUCKET}
         else
             echo 'Could not find localstack binary, please install it using `pip install localstack`'
